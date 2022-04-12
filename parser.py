@@ -60,37 +60,105 @@ def get_source_html():
     # driver.maximize_window()
 
     films_url_list = []
+    with open('films.csv', 'w', encoding='cp1251', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow((
+            'name', 'year', 'country', 'genre', 'director', 'rating'
+        ))
 
-    url = f'https://www.kinopoisk.ru/film/468373/'
-    try:
-        driver.get(url=url)
-        time.sleep(10)
-        response = driver.page_source
-        soup = BeautifulSoup(response, 'lxml')
+    with open('films.txt') as file:
+        films = file.readlines()
+    for url in films:
+        try:
+            driver.get(url=url)
+            time.sleep(15)
+            response = driver.page_source
+            soup = BeautifulSoup(response, 'lxml')
 
-        name = soup.find('h1', class_='styles_title__3eC_X styles_root__33Zsw styles_root__16Q7H '
-                                      'styles_rootInLight__1kpWr').find('span').text
-        year = soup.find_all('div', class_='styles_rowDark__1Nmd2 styles_row__Rg4Gz')[0].find('a', {'class': 'styles_linkDark__Vwdrd styles_link__29O_P'}).text
-        countries_html = soup.find_all('div', class_='styles_rowDark__1Nmd2 styles_row__Rg4Gz')[1].find_all('a', {'class': 'styles_linkDark__Vwdrd styles_link__29O_P'})
-        country = [i.text for i in countries_html]
-        genres = soup.find('div', class_='styles_valueDark__2w72W styles_value__1tR_i styles_root__14D2m').find_all('div',class_='styles_linkDark__Vwdrd styles_link__29O_P')
-        genre = [i.text for i in genres]
-        directors_html = soup.find_all('div', class_='styles_rowDark__1Nmd2 styles_row__Rg4Gz')[4].find_all()
-        # director = soup.find('a', class_='base-movie-main-info_link__3BnCh')
-        # age_restrictions = soup.find('a', class_='base-movie-main-info_link__3BnCh')
+            try:
+                name = soup.find('h1',
+                                 class_='styles_title__3eC_X styles_root__33Zsw styles_root__16Q7H styles_rootInLight__1kpWr').find(
+                    'span').text
+                name = name[:-7]
+            except Exception:
+                name = soup.find('h1',
+                                 class_='styles_title__3eC_X styles_root__33Zsw styles_root__16Q7H styles_rootInDark__2yuxZ').find(
+                    'span').text
+                name = name[:-7]
 
-        # for film in films:
-        #     film_url = 'https://www.kinopoisk.ru'+film.get('href')
-        #     films_url_list.append(film_url)
-        #
-        # with open('films_url_list.txt', 'a') as file:
-        #     for item in films_url_list:
-        #         file.write(f'{item}\n')
+            try:
+                year = soup.find_all('div', class_='styles_rowDark__1Nmd2 styles_row__Rg4Gz')[0].find('a', {
+                    'class': 'styles_linkDark__Vwdrd styles_link__29O_P'}).text
+            except Exception:
+                year = soup.find_all('div', class_='styles_rowLight__3xIw3 styles_row__Rg4Gz')[0].find('a', {
+                    'class': 'styles_linkLight__58PB8 styles_link__29O_P'}).text
 
-    # driver.find_elements(By.CLASS_NAME('base-movie-main-info_link__3BnCh'))
+            try:
+                countries_html = soup.find_all('div', class_='styles_rowDark__1Nmd2 styles_row__Rg4Gz')[1].find_all('a',
+                                                                                                                    {
+                                                                                                                        'class': 'styles_linkDark__Vwdrd styles_link__29O_P'})
+            except Exception:
+                countries_html = soup.find_all('div', class_='styles_rowLight__3xIw3 styles_row__Rg4Gz')[1].find_all(
+                    'a', {
+                        'class': 'styles_linkLight__58PB8 styles_link__29O_P'})
+            # country = [i.text for i in countries_html]
+            countries = []
+            for i in countries_html:
+                countries.append(i.text)
+            country = ', '.join(countries)
 
-    except Exception as ex:
-        print(ex)
+            try:
+                genres = soup.find('div',
+                                   class_='styles_valueDark__2w72W styles_value__1tR_i styles_root__14D2m').find_all(
+                    'a', class_='styles_linkDark__Vwdrd styles_link__29O_P')
+            except Exception:
+                genres = soup.find('div',
+                                   class_='styles_valueLight__1CXJr styles_value__1tR_i styles_root__14D2m').find_all(
+                    'a', class_='styles_linkLight__58PB8 styles_link__29O_P')
+            # genre = [i.text for i in genres]
+            genre_list = []
+            for i in genres:
+                genre_list.append(i.text)
+            genre = ', '.join(genre_list)
+
+            try:
+                directors_html = soup.find_all('div', class_='styles_rowDark__1Nmd2 styles_row__Rg4Gz')[4].find_all('a',
+                                                                                                                    class_='styles_linkDark__Vwdrd styles_link__29O_P')
+            except Exception:
+                directors_html = soup.find_all('div', class_='styles_rowLight__3xIw3 styles_row__Rg4Gz')[
+                    4].find_all('a', class_='styles_linkLight__58PB8 styles_link__29O_P')
+
+            # director = [i.text for i in directors_html]
+            directors_list = []
+            for i in directors_html:
+                directors_list.append(i.text)
+            director = ', '.join(directors_list)
+
+            try:
+                rating = soup.find('span', class_='styles_value__3ena4').find('span').text
+            except Exception:
+                rating = '0'
+            with open('films.csv', 'a', encoding='cp1251', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(
+                    (name, year, country, genre, director, rating)
+                )
+
+            # director = soup.find('a', class_='base-movie-main-info_link__3BnCh')
+            # age_restrictions = soup.find('a', class_='base-movie-main-info_link__3BnCh')
+
+            # for film in films:
+            #     film_url = 'https://www.kinopoisk.ru'+film.get('href')
+            #     films_url_list.append(film_url)
+            #
+            # with open('films_url_list.txt', 'a') as file:
+            #     for item in films_url_list:
+            #         file.write(f'{item}\n')
+
+        # driver.find_elements(By.CLASS_NAME('base-movie-main-info_link__3BnCh'))
+
+        except Exception as ex:
+            print(ex)
 
     driver.close()
     driver.quit()
